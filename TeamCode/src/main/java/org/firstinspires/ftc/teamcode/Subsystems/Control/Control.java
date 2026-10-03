@@ -17,22 +17,18 @@ import org.firstinspires.ftc.teamcode.Subsystems.Subsystem;
 public class Control extends Subsystem {
 //    public final Servo shootFlap;
     public final DcMotorEx shootMotor;
-    public final DcMotorEx intakeMotor;
-    public final DcMotorEx turretMotor;
-    public final Servo lift;
+    public final DcMotorEx intakeMotorG;
 
-    public final Servo push;
-
+    public final DcMotorEx intakeMotorR;
     private final FeedForward feedFowardVelocity = new FeedForward(10, 10);
     private final PID PIDVelocity = new PID(0.002, 0, 0.0002);
 
-    public Control(Telemetry telemetry, DcMotorEx intakeMotor, DcMotorEx shootMotor, DcMotorEx  turretMotor, Servo lift, Servo push) {
+    public Control(Telemetry telemetry, DcMotorEx shootMotor, DcMotorEx intakeMotorG, DcMotorEx intakeMotorR) {
         super(telemetry, "control");
         this.shootMotor = shootMotor;
-        this.intakeMotor = intakeMotor;
-        this.turretMotor = turretMotor;
-        this.lift = lift;
-        this.push = push;
+        this.intakeMotorG = intakeMotorG;
+        this.intakeMotorR = intakeMotorR;
+
     }
 
     /**
@@ -42,10 +38,12 @@ public class Control extends Subsystem {
         shootMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         shootMotor.setDirection(DcMotor.Direction.FORWARD);
         shootMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        intakeMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        intakeMotor.setDirection(DcMotor.Direction.FORWARD);
-        turretMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        intakeMotorG.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        intakeMotorG.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        intakeMotorG.setDirection(DcMotor.Direction.FORWARD);
+        intakeMotorR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        intakeMotorR.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        intakeMotorR.setDirection(DcMotor.Direction.FORWARD);
     }
 
 
@@ -55,25 +53,12 @@ public class Control extends Subsystem {
     public void initDevicesTeleop() {
         shootMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         shootMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        intakeMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        intakeMotorG.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        intakeMotorG.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        intakeMotorR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        intakeMotorR.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
-    public void startIntake() {
-//        intakeMotor.setMotorEnable();
-        intakeMotor.setPower(-1);
-    }
-
-    public void stopIntake() {
-        intakeMotor.setMotorDisable();
-        intakeMotor.setPower(0);
-
-    }
-
-    public void setIntakePower(double power) {
-        intakeMotor.setMotorEnable();
-        intakeMotor.setPower(-power);
-    }
 
     public void startShoot(double power) {
         shootMotor.setMotorEnable();
@@ -96,31 +81,6 @@ public class Control extends Subsystem {
         shootMotor.setVelocity(variable);
     }
 
-    // turret will drift during the sleeps, move this to robot so auto aiming can be used.
-    public void shootAll() throws InterruptedException{
-        lift.setPosition(0.65); // trigger first ball launch
-        Thread.sleep(500);
-        // wait for a set time before stopping, magic number.
-        lift.setPosition(0);
-        Thread.sleep(500);
-
-        startIntake();
-        Thread.sleep(1500);
-        stopIntake();
-
-        Thread.sleep(800);
-        push.setPosition(0.3);
-        Thread.sleep(500);
-        push.setPosition(0.0);
-        Thread.sleep(500);
-
-        lift.setPosition(0.65); // trigger third ball launch
-        Thread.sleep(500); // wait for a set time before stopping, magic number.
-        lift.setPosition(0);
-
-        push.setPosition(0.6);  //back to origin
-        Thread.sleep(500);
-    }
 
     public double shootMotorVelocity(double distance){
         if(distance < 120){

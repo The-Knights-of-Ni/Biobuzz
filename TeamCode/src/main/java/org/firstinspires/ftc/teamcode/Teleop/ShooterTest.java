@@ -1,9 +1,8 @@
-package org.firstinspires.ftc.teamcode.Testop;
-
-import android.util.Log;
+package org.firstinspires.ftc.teamcode.Teleop;
 
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -13,19 +12,15 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.Robot;
 import org.firstinspires.ftc.teamcode.Subsystems.Drive.DriveToPoint;
 import org.firstinspires.ftc.teamcode.Util.AllianceColor;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 
 
-//@TeleOp(name = "hanTeleop")
+@TeleOp(name = "ShooterTest")
 public class ShooterTest extends LinearOpMode{
     double deltaT;
     double timeCurrent;
@@ -103,11 +98,9 @@ public class ShooterTest extends LinearOpMode{
         frontRightMotor = hardwareMap.dcMotor.get("fr");    //3
         backRightMotor = hardwareMap.dcMotor.get("rr"); //2
 
-        DcMotor turretMotor = hardwareMap.dcMotor.get("turretMotor"); // ext 1
         DcMotorEx shootMotor = hardwareMap.get(DcMotorEx.class, "shootMotor"); // ext 0
-        DcMotor intakeMotor = hardwareMap.dcMotor.get("intakeMotor"); // ext 3
-
-        Servo push = hardwareMap.servo.get("pushServo");
+        DcMotor intakeMotorR = hardwareMap.dcMotor.get("intakeMotorR"); // ext 3
+        DcMotor intakeMotorG = hardwareMap.dcMotor.get("intakeMotorG");
 
         shootMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         shootMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -119,6 +112,7 @@ public class ShooterTest extends LinearOpMode{
         backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         double shooterRPM = 0;
+        double intakePower = 0;
         boolean intakeOn = false;
         boolean shooterOn = false;
 
@@ -135,11 +129,21 @@ public class ShooterTest extends LinearOpMode{
                 intakeOn = !intakeOn;
             }
             if (intakeOn){
-                intakeMotor.setPower(1);
+                intakeMotorR.setPower(-intakePower);
+                intakeMotorG.setPower(intakePower);
                 telemetry.addLine("Intake is ON");
             } else {
-                intakeMotor.setPower(0);
+                intakeMotorR.setPower(0);
+                intakeMotorG.setPower(0);
                 telemetry.addLine("Intake is OFF");
+            }
+
+            if (gamepad1.dpad_right){
+                intakePower = intakePower + 0.01;
+            }
+
+            if (gamepad1.dpad_left){
+                intakePower = intakePower - 0.01;
             }
 
             if (gamepad1.dpad_up){
@@ -162,6 +166,7 @@ public class ShooterTest extends LinearOpMode{
                 telemetry.addLine("Shooter OFF");
             }
 
+            telemetry.addData("Shooter Power: ", intakePower);
             telemetry.addData("Shooter RPM: ", shooterRPM);
 
             telemetry.update();
