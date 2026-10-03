@@ -85,8 +85,8 @@ public class AprilTagLimelightTest {
 
                 distance = getDistanceFromTags(res.get(i));
 
-                //String data = String.format(Locale.US, "{ID: %d, Distance: %.3f, Target X: %.3f, Target Y: %.3f, Area: %.5f}",
-                //        res.get(i).getFiducialId(), distance,  targetX, targetY, res.get(i).getTargetArea());
+//                String data = String.format(Locale.US, "{ID: %d, Distance: %.3f, Target X: %.3f, Target Y: %.3f, Area: %.5f}",
+//                        res.get(i).getFiducialId(), distance,  targetX, targetY, res.get(i).getTargetArea());
                 String data = String.format(Locale.US, "ID: %d, Distance: %.2f, Target X: %.2f",
                         res.get(i).getFiducialId(), distance,  targetX);
                 telemetry.addData("", data);

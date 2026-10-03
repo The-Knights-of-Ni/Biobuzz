@@ -1,12 +1,12 @@
 package org.firstinspires.ftc.teamcode.Subsystems.Vision;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
-
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.Subsystems.Subsystem;
 import org.firstinspires.ftc.teamcode.Util.AllianceColor;
 import org.firstinspires.ftc.teamcode.Util.Vector;
+import org.firstinspires.ftc.vision.apriltag.AprilTagClusterDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagSingleDetection;
 import org.openftc.easyopencv.OpenCvCamera;
@@ -70,38 +70,19 @@ public class Vision extends Subsystem {
         List<AprilTagDetection> tags = aprilTagDetectionThread.currentDetections;
         Vector position = null;
         double distance = 100000;
-        for (AprilTagDetection detection : tags) {
-            // SDK 12 split AprilTagDetection into AprilTagSingleDetection (has an id) and
-            // AprilTagClusterDetection (has no id), so only single tags are usable here.
-            if (!(detection instanceof AprilTagSingleDetection)) {
-                continue;
+        for (AprilTagDetection tag : tags) {
+            // FIRST updated how vision works
+            // https://ftc-docs.firstinspires.org/en/latest/tech_tips/tech-tips/tech-tip-apriltag-clusters/tech-tip-apriltag-clusters.html <-- Read this
+
+            if(tag instanceof AprilTagSingleDetection){
+//                telemetry.addData("Single tag detected");
+                // TBD
             }
-            AprilTagSingleDetection tag = (AprilTagSingleDetection) detection;
-            Vector robotPosition;
-            switch (tag.id) {
-                // Blue Alliance Center
-                case 2:
-                    robotPosition = new Vector(-36.6875 + tag.ftcPose.x - CAMERA_FORWARD_DISPLACEMENT, 61 - tag.ftcPose.y + CAMERA_RIGHT_DISPLACEMENT); // TODO: Calibrate y (use yaw etc. maybe?)
-                    // Red Alliance Center
-                    break;
-                case 5:
-                    robotPosition = new Vector(36.6875 + tag.ftcPose.x - CAMERA_FORWARD_DISPLACEMENT, 61 - tag.ftcPose.y + CAMERA_RIGHT_DISPLACEMENT);  // TODO: Calibrate y (use yaw etc. maybe?)
-                    // Red pixel stack
-                    break;
-                case 8:
-                    robotPosition = new Vector(11.5 + 24 - tag.ftcPose.x + CAMERA_FORWARD_DISPLACEMENT, -72.0 - tag.ftcPose.y - CAMERA_RIGHT_DISPLACEMENT);
-                    // Blue pixel stack
-                    break;
-                case 9:
-                    robotPosition = new Vector(-11.5 - 24 - tag.ftcPose.x + CAMERA_FORWARD_DISPLACEMENT, -72.0 - tag.ftcPose.y - CAMERA_RIGHT_DISPLACEMENT);
-                    break;
-                default:
-                    robotPosition = null;
-                    break;
-            }
-            double d = tag.ftcPose.range;
-            if (d < distance && robotPosition != null) {
-                position = robotPosition;
+            else if(tag instanceof AprilTagClusterDetection){
+                // TBD
+                //
+                AprilTagClusterDetection clusterDet = (AprilTagClusterDetection) tag;
+                // id of elements in clusterDet.metadata.clusterMembers
             }
         }
         return position;
