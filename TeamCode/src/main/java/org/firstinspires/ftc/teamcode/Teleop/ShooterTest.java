@@ -13,6 +13,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Robot;
+import org.firstinspires.ftc.teamcode.Subsystems.Vision.AprilTagLimelightTest;
 import org.firstinspires.ftc.teamcode.Subsystems.Drive.DriveToPoint;
 import org.firstinspires.ftc.teamcode.Util.AllianceColor;
 
@@ -125,6 +126,7 @@ public class ShooterTest extends LinearOpMode{
             // update data from gamepads
             Robot.updateGamepads();
 
+
             if (gamepad1.a){
                 intakeOn = !intakeOn;
             }
@@ -168,6 +170,25 @@ public class ShooterTest extends LinearOpMode{
 
             telemetry.addData("Shooter Power: ", intakePower);
             telemetry.addData("Shooter RPM: ", shooterRPM);
+
+            // for vision testing
+            robot.limelight.loop();
+            if(robot.limelight.detectMotif){
+                telemetry.addLine("In the land of the blind, the robot with one eye is king");
+            }
+            else{
+                telemetry.addLine("Thou hath been smited with blindness");
+            }
+
+            robot.vision.getRobotPosition();
+
+            if(gamepad1.x){
+                robot.vision.initDetectionPipelinePublic();
+            }
+
+            if(gamepad1.y){
+                robot.vision.stop();
+            }
 
             telemetry.update();
         }

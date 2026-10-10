@@ -3,16 +3,19 @@ package org.firstinspires.ftc.teamcode.Subsystems.Vision;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.teamcode.Subsystems.Subsystem;
 import org.firstinspires.ftc.teamcode.Util.AllianceColor;
 import org.firstinspires.ftc.teamcode.Util.Vector;
 import org.firstinspires.ftc.vision.apriltag.AprilTagClusterDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagClusterMemberMetadata;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagSingleDetection;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -35,6 +38,7 @@ public class Vision extends Subsystem {
     final static double CAMERA_RIGHT_DISPLACEMENT = 0.0f * mmPerInch;
     private final HardwareMap hardwareMap;
     private final AllianceColor allianceColor;
+    private final Telemetry telemetry;
 
     public AprilTagDetectionThread aprilTagDetectionThread;
 
@@ -52,6 +56,7 @@ public class Vision extends Subsystem {
             HardwareMap hardwareMap,
             AllianceColor allianceColor) {
         super(telemetry, "vision");
+        this.telemetry = telemetry;
         this.hardwareMap = hardwareMap;
         this.allianceColor = allianceColor;
 //        this.aprilTagDetectionThread = new AprilTagDetectionThread(this.hardwareMap.get(WebcamName.class, WEBCAM_NAME));
@@ -67,6 +72,7 @@ public class Vision extends Subsystem {
     }
 
     public Vector getRobotPosition() {
+        telemetry.addLine("Getting robot position");
         List<AprilTagDetection> tags = aprilTagDetectionThread.currentDetections;
         Vector position = null;
         double distance = 100000;
@@ -75,17 +81,25 @@ public class Vision extends Subsystem {
             // https://ftc-docs.firstinspires.org/en/latest/tech_tips/tech-tips/tech-tip-apriltag-clusters/tech-tip-apriltag-clusters.html <-- Read this
 
             if(tag instanceof AprilTagSingleDetection){
-//                telemetry.addData("Single tag detected");
+                telemetry.addLine("Single tag detected");
+                AprilTagSingleDetection singleDet = (AprilTagSingleDetection) tag;
                 // TBD
             }
             else if(tag instanceof AprilTagClusterDetection){
+                telemetry.addLine("Cluster tag detected");
                 // TBD
                 //
                 AprilTagClusterDetection clusterDet = (AprilTagClusterDetection) tag;
+                VectorF fieldPosition = clusterDet.metadata.fieldPosition;
+                telemetry.addData("Field location: ", fieldPosition);
                 // id of elements in clusterDet.metadata.clusterMembers
             }
         }
         return position;
+    }
+
+    public void initDetectionPipelinePublic() {
+        initDetectionPipeline();
     }
 
     private void initDetectionPipeline() {
