@@ -83,6 +83,9 @@ public class Vision extends Subsystem {
             if(tag instanceof AprilTagSingleDetection){
                 telemetry.addLine("Single tag detected");
                 AprilTagSingleDetection singleDet = (AprilTagSingleDetection) tag;
+                if(singleDet.metadata != null){
+                    telemetry.addLine(String.format("ID %d",singleDet.id));
+                }
                 // TBD
             }
             else if(tag instanceof AprilTagClusterDetection){
@@ -91,6 +94,7 @@ public class Vision extends Subsystem {
                 //
                 AprilTagClusterDetection clusterDet = (AprilTagClusterDetection) tag;
                 VectorF fieldPosition = clusterDet.metadata.fieldPosition;
+
                 telemetry.addData("Field location: ", fieldPosition);
                 // id of elements in clusterDet.metadata.clusterMembers
             }

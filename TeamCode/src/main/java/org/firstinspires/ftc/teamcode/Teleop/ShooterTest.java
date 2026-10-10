@@ -16,6 +16,7 @@ import org.firstinspires.ftc.teamcode.Robot;
 import org.firstinspires.ftc.teamcode.Subsystems.Vision.AprilTagLimelightTest;
 import org.firstinspires.ftc.teamcode.Subsystems.Drive.DriveToPoint;
 import org.firstinspires.ftc.teamcode.Util.AllianceColor;
+import org.firstinspires.ftc.teamcode.Util.Vector;
 
 import java.util.HashMap;
 import java.util.List;
@@ -180,7 +181,9 @@ public class ShooterTest extends LinearOpMode{
                 telemetry.addLine("Thou hath been smited with blindness");
             }
 
-            robot.vision.getRobotPosition();
+            Vector position = robot.vision.getRobotPosition();
+
+            telemetry.addData("Robot position: ", position);
 
             if(gamepad1.x){
                 robot.vision.initDetectionPipelinePublic();
