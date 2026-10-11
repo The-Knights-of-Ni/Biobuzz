@@ -13,8 +13,12 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Robot;
+import org.firstinspires.ftc.teamcode.Subsystems.Vision.AprilTagLimelightTest;
 import org.firstinspires.ftc.teamcode.Subsystems.Drive.DriveToPoint;
+import org.firstinspires.ftc.teamcode.Subsystems.Vision.Vision;
 import org.firstinspires.ftc.teamcode.Util.AllianceColor;
+import org.firstinspires.ftc.teamcode.Util.Vector;
+import org.firstinspires.ftc.vision.VisionProcessor;
 
 import java.util.HashMap;
 import java.util.List;
@@ -66,7 +70,7 @@ public class ShooterTest extends LinearOpMode{
     }
 
     public void runShootMotor(double rpm){
-        double tps = -(rpm * 28)/60; // 28 points per rotation
+        double tps = (rpm * 28)/60; // 28 points per rotation
         robot.control.shootMotor.setVelocity(tps);
     }
 
@@ -116,6 +120,8 @@ public class ShooterTest extends LinearOpMode{
         boolean intakeOn = false;
         boolean shooterOn = false;
 
+        Vision camera = new Vision(telemetry, hardwareMap, AllianceColor.BLUE);
+
         while (opModeIsActive()){
             // Clears cache to refresh data
             for (LynxModule hub : allHubs) {
@@ -125,12 +131,13 @@ public class ShooterTest extends LinearOpMode{
             // update data from gamepads
             Robot.updateGamepads();
 
+
             if (gamepad1.a){
                 intakeOn = !intakeOn;
             }
             if (intakeOn){
-                intakeMotorR.setPower(-intakePower);
-                intakeMotorG.setPower(intakePower);
+                intakeMotorR.setPower(intakePower);
+                intakeMotorG.setPower(-intakePower);
                 telemetry.addLine("Intake is ON");
             } else {
                 intakeMotorR.setPower(0);
@@ -168,6 +175,21 @@ public class ShooterTest extends LinearOpMode{
 
             telemetry.addData("Shooter Power: ", intakePower);
             telemetry.addData("Shooter RPM: ", shooterRPM);
+
+            // for vision testing
+            robot.limelight.loop();
+            if(robot.limelight.detectMotif){
+                telemetry.addLine("In the land of the blind, the robot with one eye is king");
+            }
+            else{
+                telemetry.addLine("Thou hath been smited with blindness");
+            }
+
+            camera.getRobotPosition();
+
+            if(gamepad1.y){
+                camera.stop();
+            }
 
             telemetry.update();
         }

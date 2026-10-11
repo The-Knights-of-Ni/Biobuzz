@@ -1,18 +1,21 @@
 package org.firstinspires.ftc.teamcode.Subsystems.Vision;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
-
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.teamcode.Subsystems.Subsystem;
 import org.firstinspires.ftc.teamcode.Util.AllianceColor;
 import org.firstinspires.ftc.teamcode.Util.Vector;
+import org.firstinspires.ftc.vision.apriltag.AprilTagClusterDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagClusterMemberMetadata;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagSingleDetection;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -21,8 +24,8 @@ import java.util.List;
  * @see <a href="https://github.com/OpenFTC/EasyOpenCV">EasyOpenCV</a>
  */
 public class Vision extends Subsystem {
-    public static final int CAMERA_WIDTH = 1920; // width of wanted camera resolution
-    public static final int CAMERA_HEIGHT = 1080; // height of wanted camera resolution
+    public static final int CAMERA_WIDTH = 640; // width of wanted camera resolution; original 1920
+    public static final int CAMERA_HEIGHT = 360; // height of wanted camera resolutionl original 1080
     public static final String WEBCAM_NAME =
             "Webcam 1"; // insert webcam name from configuration if using webcam
     // Since ImageTarget trackable use mm to specify their dimensions, we must use mm for all the
@@ -35,6 +38,7 @@ public class Vision extends Subsystem {
     final static double CAMERA_RIGHT_DISPLACEMENT = 0.0f * mmPerInch;
     private final HardwareMap hardwareMap;
     private final AllianceColor allianceColor;
+    private final Telemetry telemetry;
 
     public AprilTagDetectionThread aprilTagDetectionThread;
 
@@ -52,10 +56,11 @@ public class Vision extends Subsystem {
             HardwareMap hardwareMap,
             AllianceColor allianceColor) {
         super(telemetry, "vision");
+        this.telemetry = telemetry;
         this.hardwareMap = hardwareMap;
         this.allianceColor = allianceColor;
-//        this.aprilTagDetectionThread = new AprilTagDetectionThread(this.hardwareMap.get(WebcamName.class, WEBCAM_NAME));
-//        this.aprilTagDetectionThread.start();
+        this.aprilTagDetectionThread = new AprilTagDetectionThread(this.hardwareMap.get(WebcamName.class, WEBCAM_NAME));
+        this.aprilTagDetectionThread.start();
         // Telemetry
         logger.info("Vision init complete");
         initDetectionPipeline();
@@ -66,45 +71,39 @@ public class Vision extends Subsystem {
         this.aprilTagDetectionThread.wait(2500);
     }
 
-    public Vector getRobotPosition() {
+    public void getRobotPosition() {
+        telemetry.addLine("Getting robot position");
         List<AprilTagDetection> tags = aprilTagDetectionThread.currentDetections;
-        Vector position = null;
+       // Vector position = null;
         double distance = 100000;
-        for (AprilTagDetection detection : tags) {
-            // SDK 12 split AprilTagDetection into AprilTagSingleDetection (has an id) and
-            // AprilTagClusterDetection (has no id), so only single tags are usable here.
-            if (!(detection instanceof AprilTagSingleDetection)) {
-                continue;
+        for (AprilTagDetection tag : tags) {
+            // FIRST updated how vision works
+            // https://ftc-docs.firstinspires.org/en/latest/tech_tips/tech-tips/tech-tip-apriltag-clusters/tech-tip-apriltag-clusters.html <-- Read this
+
+            if(tag instanceof AprilTagSingleDetection){
+                telemetry.addLine("Single tag detected");
+                AprilTagSingleDetection singleDet = (AprilTagSingleDetection) tag;
+                if(singleDet.metadata != null){
+                    telemetry.addLine(String.format("ID %d",singleDet.id));
+                }
+                // TBD
             }
-            AprilTagSingleDetection tag = (AprilTagSingleDetection) detection;
-            Vector robotPosition;
-            switch (tag.id) {
-                // Blue Alliance Center
-                case 2:
-                    robotPosition = new Vector(-36.6875 + tag.ftcPose.x - CAMERA_FORWARD_DISPLACEMENT, 61 - tag.ftcPose.y + CAMERA_RIGHT_DISPLACEMENT); // TODO: Calibrate y (use yaw etc. maybe?)
-                    // Red Alliance Center
-                    break;
-                case 5:
-                    robotPosition = new Vector(36.6875 + tag.ftcPose.x - CAMERA_FORWARD_DISPLACEMENT, 61 - tag.ftcPose.y + CAMERA_RIGHT_DISPLACEMENT);  // TODO: Calibrate y (use yaw etc. maybe?)
-                    // Red pixel stack
-                    break;
-                case 8:
-                    robotPosition = new Vector(11.5 + 24 - tag.ftcPose.x + CAMERA_FORWARD_DISPLACEMENT, -72.0 - tag.ftcPose.y - CAMERA_RIGHT_DISPLACEMENT);
-                    // Blue pixel stack
-                    break;
-                case 9:
-                    robotPosition = new Vector(-11.5 - 24 - tag.ftcPose.x + CAMERA_FORWARD_DISPLACEMENT, -72.0 - tag.ftcPose.y - CAMERA_RIGHT_DISPLACEMENT);
-                    break;
-                default:
-                    robotPosition = null;
-                    break;
-            }
-            double d = tag.ftcPose.range;
-            if (d < distance && robotPosition != null) {
-                position = robotPosition;
+            else if(tag instanceof AprilTagClusterDetection){
+                telemetry.addLine("Cluster tag detected");
+                // TBD
+                //
+                AprilTagClusterDetection clusterDet = (AprilTagClusterDetection) tag;
+                VectorF fieldPosition = clusterDet.metadata.fieldPosition;
+
+                telemetry.addData("Field location: ", fieldPosition);
+                // id of elements in clusterDet.metadata.clusterMembers
             }
         }
-        return position;
+        //return position;
+    }
+
+    public void initDetectionPipelinePublic() {
+        initDetectionPipeline();
     }
 
     private void initDetectionPipeline() {

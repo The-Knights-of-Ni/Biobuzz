@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.Subsystems.Vision;
 
 import android.util.Size;
-
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
