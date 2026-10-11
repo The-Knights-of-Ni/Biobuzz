@@ -24,8 +24,8 @@ import java.util.List;
  * @see <a href="https://github.com/OpenFTC/EasyOpenCV">EasyOpenCV</a>
  */
 public class Vision extends Subsystem {
-    public static final int CAMERA_WIDTH = 1920; // width of wanted camera resolution
-    public static final int CAMERA_HEIGHT = 1080; // height of wanted camera resolution
+    public static final int CAMERA_WIDTH = 640; // width of wanted camera resolution; original 1920
+    public static final int CAMERA_HEIGHT = 360; // height of wanted camera resolutionl original 1080
     public static final String WEBCAM_NAME =
             "Webcam 1"; // insert webcam name from configuration if using webcam
     // Since ImageTarget trackable use mm to specify their dimensions, we must use mm for all the
@@ -59,8 +59,8 @@ public class Vision extends Subsystem {
         this.telemetry = telemetry;
         this.hardwareMap = hardwareMap;
         this.allianceColor = allianceColor;
-//        this.aprilTagDetectionThread = new AprilTagDetectionThread(this.hardwareMap.get(WebcamName.class, WEBCAM_NAME));
-//        this.aprilTagDetectionThread.start();
+        this.aprilTagDetectionThread = new AprilTagDetectionThread(this.hardwareMap.get(WebcamName.class, WEBCAM_NAME));
+        this.aprilTagDetectionThread.start();
         // Telemetry
         logger.info("Vision init complete");
         initDetectionPipeline();
@@ -71,10 +71,10 @@ public class Vision extends Subsystem {
         this.aprilTagDetectionThread.wait(2500);
     }
 
-    public Vector getRobotPosition() {
+    public void getRobotPosition() {
         telemetry.addLine("Getting robot position");
         List<AprilTagDetection> tags = aprilTagDetectionThread.currentDetections;
-        Vector position = null;
+       // Vector position = null;
         double distance = 100000;
         for (AprilTagDetection tag : tags) {
             // FIRST updated how vision works
@@ -99,7 +99,7 @@ public class Vision extends Subsystem {
                 // id of elements in clusterDet.metadata.clusterMembers
             }
         }
-        return position;
+        //return position;
     }
 
     public void initDetectionPipelinePublic() {
