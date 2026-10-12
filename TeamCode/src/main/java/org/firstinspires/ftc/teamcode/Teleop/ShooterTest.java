@@ -131,10 +131,8 @@ public class ShooterTest extends LinearOpMode{
             // update data from gamepads
             Robot.updateGamepads();
 
+            intakeOn = gamepad1.a;
 
-            if (gamepad1.a){
-                intakeOn = !intakeOn;
-            }
             if (intakeOn){
                 intakeMotorR.setPower(intakePower);
                 intakeMotorG.setPower(-intakePower);
@@ -153,15 +151,15 @@ public class ShooterTest extends LinearOpMode{
                 intakePower = intakePower - 0.01;
             }
 
-            if (gamepad1.dpad_up){
+            if (Robot.gamepad1.dPadUp.isPressed()){
                 shooterRPM = shooterRPM + 10;
             }
 
-            if (gamepad1.dpad_down){
+            if (Robot.gamepad1.dPadDown.isPressed()){
                 shooterRPM = shooterRPM - 10;
             }
 
-            if (gamepad1.b){
+            if (Robot.gamepad1.bButton.isPressed()){
                 shooterOn = !shooterOn;
             }
 
@@ -173,8 +171,9 @@ public class ShooterTest extends LinearOpMode{
                 telemetry.addLine("Shooter OFF");
             }
 
-            telemetry.addData("Shooter Power: ", intakePower);
+            telemetry.addData("Intake Power: ", intakePower);
             telemetry.addData("Shooter RPM: ", shooterRPM);
+            telemetry.addData("Measured RPM: ", "%.0f", shootMotor.getVelocity() * 60 / TICKS_PER_REV);
 
             // for vision testing
             robot.limelight.loop();
@@ -187,13 +186,9 @@ public class ShooterTest extends LinearOpMode{
 
             camera.getRobotPosition();
 
-            if(gamepad1.y){
-                camera.stop();
-            }
-
             telemetry.update();
         }
 
-
+        camera.stop();
     }
 }

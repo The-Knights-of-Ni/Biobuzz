@@ -9,11 +9,13 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class AprilTagDetectionThread extends Thread {
-    public boolean terminate = false;
-    public List<AprilTagDetection> currentDetections;
+    // volatile so the flag set from the OpMode thread is seen by this thread
+    public volatile boolean terminate = false;
+    public volatile List<AprilTagDetection> currentDetections = new ArrayList<>();
     /**
      * The variable to store our instance of the AprilTag processor.
      */
@@ -26,6 +28,8 @@ public class AprilTagDetectionThread extends Thread {
 
     public AprilTagDetectionThread(CameraName cameraName) {
         this.cameraName = cameraName;
+        // don't keep the app alive if this thread is somehow left running
+        setDaemon(true);
         initAprilTag();
     }
 
@@ -35,10 +39,21 @@ public class AprilTagDetectionThread extends Thread {
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                // An uncaught exception in any thread crashes the whole Robot Controller app,
+                // so treat an interrupt as a request to stop instead of rethrowing.
+                break;
             }
         }
+        visionPortal.close();
+    }
 
+    /**
+     * Stops the loop and waits for the thread to release the camera.
+     */
+    public void shutdown() throws InterruptedException {
+        terminate = true;
+        interrupt();
+        join(2500);
     }
 
     /**
@@ -52,7 +67,7 @@ public class AprilTagDetectionThread extends Thread {
                 //.setDrawCubeProjection(false)
                 //.setDrawTagOutline(true)
                 .setTagFamily(AprilTagProcessor.TagFamily.TAG_36h11)
-                .setTagLibrary(AprilTagGameDatabase.getCenterStageTagLibrary())
+                .setTagLibrary(AprilTagGameDatabase.getCurrentGameTagLibrary())
                 .setOutputUnits(DistanceUnit.INCH, AngleUnit.DEGREES)
 
                 // == CAMERA CALIBRATION ==

@@ -10,6 +10,7 @@ import org.firstinspires.ftc.teamcode.Util.Vector;
 import org.firstinspires.ftc.vision.apriltag.AprilTagClusterDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagClusterMemberMetadata;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagPoseFtc;
 import org.firstinspires.ftc.vision.apriltag.AprilTagSingleDetection;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
@@ -25,7 +26,7 @@ import java.util.List;
  */
 public class Vision extends Subsystem {
     public static final int CAMERA_WIDTH = 640; // width of wanted camera resolution; original 1920
-    public static final int CAMERA_HEIGHT = 360; // height of wanted camera resolutionl original 1080
+    public static final int CAMERA_HEIGHT = 480; // height of wanted camera resolutionl original 1080
     public static final String WEBCAM_NAME =
             "Webcam 1"; // insert webcam name from configuration if using webcam
     // Since ImageTarget trackable use mm to specify their dimensions, we must use mm for all the
@@ -63,12 +64,8 @@ public class Vision extends Subsystem {
         this.aprilTagDetectionThread.start();
         // Telemetry
         logger.info("Vision init complete");
-        initDetectionPipeline();
-    }
-
-    public void stopAprilTagDetection() throws InterruptedException {
-        this.aprilTagDetectionThread.terminate = true;
-        this.aprilTagDetectionThread.wait(2500);
+        // initDetectionPipeline() is not called here: it opened "Webcam 1" a second time through
+        // EasyOpenCV while the VisionPortal in aprilTagDetectionThread already owns it.
     }
 
     public void getRobotPosition() {
@@ -83,8 +80,12 @@ public class Vision extends Subsystem {
             if(tag instanceof AprilTagSingleDetection){
                 telemetry.addLine("Single tag detected");
                 AprilTagSingleDetection singleDet = (AprilTagSingleDetection) tag;
-                if(singleDet.metadata != null){
-                    telemetry.addLine(String.format("ID %d",singleDet.id));
+                telemetry.addLine(String.format("ID %d", singleDet.id));
+                if (singleDet.ftcPose != null) {
+                    addPoseTelemetry(singleDet.ftcPose);
+                } else {
+                    // ftcPose is only computed for tags whose ID is in the processor's tag library
+                    telemetry.addLine("No pose (tag not in library)");
                 }
                 // TBD
             }
@@ -96,10 +97,19 @@ public class Vision extends Subsystem {
                 VectorF fieldPosition = clusterDet.metadata.fieldPosition;
 
                 telemetry.addData("Field location: ", fieldPosition);
+                telemetry.addData("Cluster", "%s (%d%% found)", clusterDet.metadata.name, clusterDet.percentClusterFound);
+                addPoseTelemetry(clusterDet.ftcPose);
                 // id of elements in clusterDet.metadata.clusterMembers
             }
         }
         //return position;
+    }
+    private void addPoseTelemetry(AprilTagPoseFtc pose) {
+        telemetry.addData("Range (in)", "%.1f", pose.range); // straight-line distance across the floor
+        telemetry.addData("Bearing (deg)", "%.1f", pose.bearing);
+        telemetry.addData("Elevation (deg)", "%.1f", pose.elevation);
+        telemetry.addData("XYZ (in)", "%.1f  %.1f  %.1f", pose.x, pose.y, pose.z);
+        telemetry.addData("PRY (deg)", "%.1f  %.1f  %.1f", pose.pitch, pose.roll, pose.yaw);
     }
 
     public void initDetectionPipelinePublic() {
@@ -140,9 +150,15 @@ public class Vision extends Subsystem {
                 });
     }
 
-    public void stop() {
-        // Stop streaming
-        camera.stopStreaming();
-        camera.closeCameraDevice();
+    /**
+     * Stops AprilTag detection and releases the camera. Safe to call more than once.
+     */
+    public void stop() throws InterruptedException {
+        aprilTagDetectionThread.shutdown();
+        if (camera != null) {
+            camera.stopStreaming();
+            camera.closeCameraDevice();
+            camera = null;
+        }
     }
 }
