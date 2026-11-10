@@ -214,7 +214,10 @@ public class Robot {
         control = new Control(telemetry,
                 (DcMotorEx) hardwareMap.get("shootMotor"),
                 (DcMotorEx) hardwareMap.get("intakeMotorG"),
-                (DcMotorEx) hardwareMap.get("intakeMotorR"));
+                (DcMotorEx) hardwareMap.get("intakeMotorR"),
+                (Servo) hardwareMap.get("kicker"),
+                (Servo) hardwareMap.get("pollenGate"),
+                (Servo) hardwareMap.get("lastPollen"));
         logger.info("Control subsystem init finished");
 
         if (visionEnabled) {

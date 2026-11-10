@@ -38,6 +38,8 @@ public class ShooterTest extends LinearOpMode{
     DcMotor backRightMotor;
     double ShootMotorPower = 0.55;
 
+    Servo kicker;
+
     private VoltageSensor battery;
     private ElapsedTime timer2;
 
@@ -70,7 +72,7 @@ public class ShooterTest extends LinearOpMode{
     }
 
     public void runShootMotor(double rpm){
-        double tps = (rpm * 28)/60; // 28 points per rotation
+        double tps = -(rpm * 28)/60; // 28 points per rotation
         robot.control.shootMotor.setVelocity(tps);
     }
 
@@ -105,6 +107,9 @@ public class ShooterTest extends LinearOpMode{
         DcMotorEx shootMotor = hardwareMap.get(DcMotorEx.class, "shootMotor"); // ext 0
         DcMotor intakeMotorR = hardwareMap.dcMotor.get("intakeMotorR"); // ext 3
         DcMotor intakeMotorG = hardwareMap.dcMotor.get("intakeMotorG");
+        Servo kicker = hardwareMap.servo.get("kicker");
+        Servo pollenGate = hardwareMap.servo.get("pollenGate");
+        Servo lastPollen = hardwareMap.servo.get("lastPollen");
 
         shootMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         shootMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -113,12 +118,20 @@ public class ShooterTest extends LinearOpMode{
                 DcMotor.RunMode.RUN_USING_ENCODER,
                 new PIDFCoefficients(BASE_P, BASE_I, BASE_D, BASE_F));
         frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        backLeftMotor.setDirection(DcMotorSimple.Direction.FORWARD);
 
-        double shooterRPM = 0;
-        double intakePower = 0;
+        kicker.setDirection(Servo.Direction.REVERSE);
+        pollenGate.setDirection(Servo.Direction.REVERSE);
+        lastPollen.setDirection(Servo.Direction.REVERSE);
+
+        double shooterRPM = 2700;
+        double intakePower = 1;
+        double kickerPos = 0;
         boolean intakeOn = false;
         boolean shooterOn = false;
+        boolean pollenBlockOn = false;
+        boolean kickerOn = false;
+        boolean lastPollenOn = false;
 
         Vision camera = new Vision(telemetry, hardwareMap, AllianceColor.BLUE);
 
@@ -133,9 +146,21 @@ public class ShooterTest extends LinearOpMode{
 
             intakeOn = gamepad1.a;
 
+            if (gamepad1.yWasPressed()){
+                pollenBlockOn = !pollenBlockOn;
+            }
+
+            if (gamepad1.xWasPressed()){
+                kickerOn = !kickerOn;
+            }
+
+            if (gamepad1.leftBumperWasPressed()){
+                lastPollenOn = !lastPollenOn;
+            }
+
             if (intakeOn){
-                intakeMotorR.setPower(intakePower);
-                intakeMotorG.setPower(-intakePower);
+                intakeMotorR.setPower(-intakePower);
+                intakeMotorG.setPower(intakePower);
                 telemetry.addLine("Intake is ON");
             } else {
                 intakeMotorR.setPower(0);
@@ -143,12 +168,12 @@ public class ShooterTest extends LinearOpMode{
                 telemetry.addLine("Intake is OFF");
             }
 
-            if (gamepad1.dpad_right){
-                intakePower = intakePower + 0.01;
+            if (Robot.gamepad1.dPadRight.isPressed()){
+                kickerPos = kickerPos + 0.05;
             }
 
-            if (gamepad1.dpad_left){
-                intakePower = intakePower - 0.01;
+            if (Robot.gamepad1.dPadLeft.isPressed()){
+                kickerPos = kickerPos - 0.05;
             }
 
             if (Robot.gamepad1.dPadUp.isPressed()){
@@ -170,6 +195,34 @@ public class ShooterTest extends LinearOpMode{
                 runShootMotor(0);
                 telemetry.addLine("Shooter OFF");
             }
+
+            if (gamepad1.right_trigger >= 0.5){
+                lastPollen.setPosition(0);
+            }
+
+            if (gamepad1.left_trigger >= 0.5){
+                lastPollen.setPosition(kickerPos);
+            }
+
+            if (pollenBlockOn){
+                pollenGate.setPosition(0.075);
+            } else {
+                pollenGate.setPosition(0.2);
+            }
+
+            if (kickerOn){
+                kicker.setPosition(0.4);
+            } else{
+                kicker.setPosition(0.05);
+            }
+
+            if (lastPollenOn){
+                lastPollen.setPosition(0);
+            } else{
+                lastPollen.setPosition(0.4);
+            }
+
+            telemetry.addData("Servo Position: ", kickerPos);
 
             telemetry.addData("Intake Power: ", intakePower);
             telemetry.addData("Shooter RPM: ", shooterRPM);

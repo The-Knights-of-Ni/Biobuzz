@@ -19,16 +19,24 @@ public class Control extends Subsystem {
     public final DcMotorEx shootMotor;
     public final DcMotorEx intakeMotorG;
 
+    public final Servo kicker;
+
+    public final Servo pollenGate;
+
+    public final Servo lastPollen;
+
     public final DcMotorEx intakeMotorR;
     private final FeedForward feedFowardVelocity = new FeedForward(10, 10);
     private final PID PIDVelocity = new PID(0.002, 0, 0.0002);
 
-    public Control(Telemetry telemetry, DcMotorEx shootMotor, DcMotorEx intakeMotorG, DcMotorEx intakeMotorR) {
+    public Control(Telemetry telemetry, DcMotorEx shootMotor, DcMotorEx intakeMotorG, DcMotorEx intakeMotorR, Servo kicker, Servo pollenGate, Servo lastPollen) {
         super(telemetry, "control");
         this.shootMotor = shootMotor;
         this.intakeMotorG = intakeMotorG;
         this.intakeMotorR = intakeMotorR;
-
+        this.kicker = kicker;
+        this.pollenGate = pollenGate;
+        this.lastPollen = lastPollen;
     }
 
     /**
